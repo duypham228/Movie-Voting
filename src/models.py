@@ -40,7 +40,7 @@ class Options(Base):
 
     def to_json(self):
         return {
-            'id': uuid.uuid4() 
+            'id': uuid.uuid4(),
             # Generates a random uuid                 
             'name': self.name
         }

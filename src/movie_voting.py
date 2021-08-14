@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, flash, redirect, url_for, session, jsonify
 from flask_migrate import Migrate
 from werkzeug.security import generate_password_hash, check_password_hash
-from models import db, Users, Polls, Topics
+from models import db, Users, Polls, Topics, Options
 
 movie_voting = Flask(__name__)
 
@@ -133,6 +133,17 @@ def api_poll_vote():
 @movie_voting.route('/polls', methods=['GET'])
 def polls():
     return render_template('polls.html')
+
+@movie_voting.route('/polls/<poll_name>')
+def poll(poll_name):
+
+    return render_template('index.html')
+
+@movie_voting.route('/api/poll/<poll_name>')
+def api_poll(poll_name):
+    poll = Topics.query.filter(Topics.title.like(poll_name)).first()
+
+    return jsonify({'Polls': [poll.to_json()]}) if poll else jsonify({'message': 'poll not found'})
 
 # if __name__ == '__main__':
 #     movie_voting.run()
