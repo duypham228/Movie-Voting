@@ -141,7 +141,7 @@ def poll(poll_name):
 
 @movie_voting.route('/api/poll/<poll_name>')
 def api_poll(poll_name):
-    poll = Topics.query.filter(Topics.title.like(poll_name)).first()
+    polls = Topics.query.filter_by(status=1).join(Polls).order_by(Topics.id.desc()).all()
 
     return jsonify({'Polls': [poll.to_json()]}) if poll else jsonify({'message': 'poll not found'})
 
