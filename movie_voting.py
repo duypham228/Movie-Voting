@@ -5,6 +5,7 @@ from models import db, Users, Polls, Topics, Options, UserPolls
 from flask_admin import Admin
 from flask_admin.contrib.sqla import ModelView
 from admin import AdminView, TopicView
+import os
 
 movie_voting = Flask(__name__)
 
