@@ -80,3 +80,11 @@ class Users(Base):
     email = db.Column(db.String(100), unique=True)
     username = db.Column(db.String(50), unique=True)
     password = db.Column(db.String(200))
+
+class UserPolls(Base):
+    topic_id = db.Column(db.Integer, db.ForeignKey('topics.id'))
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+
+    topics = db.relationship('Topics', foreign_keys=[topic_id], backref=db.backref('voted_on_by', lazy='dynamic'))
+
+    users = db.relationship('Users', foreign_keys=[user_id], backref=db.backref('voted_on', lazy='dynamic'))
