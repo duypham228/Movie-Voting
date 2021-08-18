@@ -1,0 +1,1 @@
+from movie_voting import movie_voting as application

@@ -8,9 +8,11 @@ from admin import AdminView, TopicView
 
 movie_voting = Flask(__name__)
 
-
-# load config from the config file we created earlier
-movie_voting.config.from_object('config')
+# load config from the config file we created earlier 
+if os.getenv('APP_MODE') == "PRODUCTION":
+    votr.config.from_object('config')
+else:
+    votr.config.from_object('production_settings')
 
 # initialize and create the database 
 db.init_app(movie_voting)
