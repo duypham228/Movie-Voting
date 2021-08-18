@@ -32,6 +32,23 @@ var PollForm = React.createClass({
       });
     },
 
+    componentDidMount: function(){
+        var url =  origin + '/api/polls/options'
+        //get all options
+        $.ajax({
+            url: url,
+            dataType: 'json',
+            cache: false,
+            success: function(data) {
+                console.log(data);
+                this.setState({all_options: data});
+            }.bind(this),
+            error: function(xhr, status, err) {
+                console.error(url, status, err.toString());
+            }.bind(this)
+        });
+      },
+
     handleSubmit: function(e){
         //TODO handle form submit
         e.preventDefault();
@@ -90,33 +107,66 @@ var PollForm = React.createClass({
 });
 
 var LivePreview = React.createClass({
+
+    getInitialState: function(){
+      return {selected_option: '', disabled: 0};
+    },
+  
+    handleOptionChange: function(e){
+      this.setState({selected_option: e.target.value });
+    },
+
+    voteHandler: function(e){
+        e.preventDefault();
+    
+        // build the json data
+        var data = {"poll_title": this.props.title, "option": this.state.selected_option};
+    
+        //calls props handler
+        this.props.voteHandler(data);
+    
+        //disable the button
+        this.setState({disabled: 1});
+    
+    },
     render: function(){
-  
+
         var options = this.props.options.map(function(option){
-  
+            
             if(option.name) {
-            return (
-                <div key={option.name}>
-                <input name="options" type="radio" value={option.name} /> {option.name}
-                <br />
-                </div>
-            );
+
+                // calculate progress bar percentage
+                var progress = Math.round((option.vote_count / this.props.total_vote_count) * 100) || 0
+                var current = {width: progress+"%"}
+
+                return (
+                    <div key={option.name}>
+                        <input name="options" type="radio" value={option.name} onChange={this.handleOptionChange} /> {option.name} 
+                        <div className="progress">
+                            <div className="progress-bar progress-bar-success" role="progressbar" aria-valuenow={progress} aria-valuemin="0" aria-valuemax="100" style={current}>
+                            {progress}%
+                            </div> 
+                        </div> 
+                    </div> 
+                );
             }
-        });
-  
+        }.bind(this));
         return(
-        <div className="panel panel-success">
-            <div className="panel-heading">
-                <h4>{this.props.title}</h4>
-            </div>
-            <div className="panel-body">
-                <form>
-                    {options}
-                    <br />
-                    <button type="submit" className="btn btn-success btn-outline hvr-grow">Vote!</button>
-                </form>
-            </div>
-        </div>
+            <div className={this.props.classContext}>
+                <div className="panel panel-success">
+                    <div className="panel-heading">
+                        <h4>{this.props.title}</h4> 
+                    </div> 
+                    <div className="panel-body">
+                        <form onSubmit={this.voteHandler}>
+                            {options}
+                            <br />
+                            <button type="submit" disabled={this.state.disabled} className="btn btn-success btn-outline hvr-grow">Vote!</button>
+                            <small> {this.props.total_vote_count} votes so far</small>
+                        </form> 
+                    </div> 
+                </div> 
+            </div> 
         )
     }
 });
@@ -135,12 +185,12 @@ var LivePreviewProps = React.createClass({
             data: JSON.stringify(data),
             contentType: 'application/json; charset=utf-8',
             success: function(data){
-            alert(data.message);
-            this.setState({selected_option: ''});
-            this.props.loadPollsFromServer();
+                alert(data.message);
+                this.setState({selected_option: ''});
+                this.props.loadPollsFromServer();
             }.bind(this),
             error: function(xhr, status, err){
-            alert('Poll creation failed: ' + err.toString());
+                alert('Poll creation failed: ' + err.toString());
             }.bind(this)
         });
   
@@ -148,9 +198,7 @@ var LivePreviewProps = React.createClass({
     render: function(){
         var polls = this.props.polls.Polls.map(function(poll){
             return (
-                <LivePreview key={poll.title} title={poll.title} options={poll.options}
-                total_vote_count={poll.total_vote_count} voteHandler={this.voteHandler}
-                classContext={this.props.classContext} /> 
+                <LivePreview key={poll.title} title={poll.title} options={poll.options} total_vote_count={poll.total_vote_count} voteHandler={this.voteHandler} classContext={this.props.classContext} /> 
             );
         }.bind(this));
     
@@ -189,7 +237,7 @@ var AllPolls = React.createClass({
             dataType: 'json',
             cache: false,
             success: function(data) {
-            this.setState({polls: data});
+                this.setState({polls: data});
             }.bind(this),
             error: function(xhr, status, err) {
                 console.error(url, status, err.toString());
@@ -221,70 +269,7 @@ var AllPolls = React.createClass({
     }
 });
 
-var LivePreview = React.createClass({
 
-    getInitialState: function(){
-      return {selected_option: '', disabled: 0};
-    },
-  
-    handleOptionChange: function(e){
-      this.setState({selected_option: e.target.value });
-    },
-
-    voteHandler: function(e){
-        e.preventDefault();
-    
-        // build the json data
-        var data = {"poll_title": this.props.title, "option": this.state.selected_option};
-    
-        //calls props handler
-        this.props.voteHandler(data);
-    
-        //disable the button
-        this.setState({disabled: 1});
-    
-    },
-    render: function(){
-
-        var options = this.props.options.map(function(option){
-            
-            if(option.name) {
-
-                // calculate progress bar percentage
-                var progress = Math.round((option.vote_count / this.props.total_vote_count) * 100) || 0
-                var current = {width: progress+"%"}
-
-                return (
-                    <div key={option.name}>
-                        <input name="options" type="radio" value={option.name} onChange={this.handleOptionChange} /> {option.name} 
-                        <div className="progress">
-                            <div className="progress-bar progress-bar-success" role="progressbar" aria-valuenow={progress}
-                            aria-valuemin="0" aria-valuemax="100" style={current}>
-                            {progress}%
-                            </div> 
-                        </div> 
-                    </div> 
-                );
-            }
-        }.bind(this));
-        return(
-            <div className={this.props.classContext}>
-                <div className="panel panel-success">
-                    <div className="panel-heading">
-                    <h4>{this.props.title}</h4> 
-                    </div> 
-                    <div className="panel-body">
-                    <form onSubmit={this.voteHandler}>
-                        {options}
-                        <br />
-                        <button type="submit" disabled={this.state.disabled} className="btn btn-success btn-outline hvr-grow">Vote!</button> <small>{this.props.total_vote_count} votes so far</small>
-                    </form> 
-                    </div> 
-                </div> 
-            </div> 
-        )
-    }
-});
   
 ReactDOM.render((
     <Router history={browserHistory}>
